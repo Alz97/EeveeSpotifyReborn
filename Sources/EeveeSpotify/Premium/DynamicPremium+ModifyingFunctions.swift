@@ -32,6 +32,18 @@ func modifyAttributes(_ attributes: inout [String: AccountAttribute]) {
     
     let formatter = ISO8601DateFormatter()
     formatter.timeZone = TimeZone(abbreviation: "UTC")
+
+    attributes["audio-quality"] = AccountAttribute.with { 
+        $0.stringValue = "1" 
+    }
+
+    attributes["very-high-bitrate"] = AccountAttribute.with {
+        $0.boolValue = true 
+    }
+
+    attributes["public-toplist"] = AccountAttribute.with { 
+        $0.stringValue = "1" 
+    }
     
     attributes["ads"] = AccountAttribute.with {
         $0.boolValue = false
