@@ -40,10 +40,6 @@ func modifyAttributes(_ attributes: inout [String: AccountAttribute]) {
     attributes["very-high-bitrate"] = AccountAttribute.with {
         $0.boolValue = true 
     }
-
-    attributes["public-toplist"] = AccountAttribute.with { 
-        $0.stringValue = "1" 
-    }
     
     attributes["ads"] = AccountAttribute.with {
         $0.boolValue = false
