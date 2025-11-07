@@ -1,136 +1,55 @@
 import Foundation
 
-// MARK: - Constants
-enum PremiumPlanConstants {
-    static let planName = "EeveeSpotify"
-    static let planIdentifier = "Eevee - WADBB Remod"
-    static let colorCode = "#FFD2D7"
-    static let featureColor = "#1ED760"
-    
-    enum SubscriptionStatus: Int {
-        case trial = 0
-        case prepaid = 1
-        case subscription = 2
+func getPremiumPlanBadge() throws -> Data {
+    let badge = YourPremiumBadge.with {
+        $0.name = "Eevee"
+        $0.version = 2
+        $0.colorCode = "#FFD2D7"
     }
     
-    enum PlanVariant: Int {
-        case standard = 2
-    }
+    return try badge.serializedData()
 }
 
-// MARK: - Error Handling
-enum PremiumDataError: Error {
-    case serializationFailed(String)
-    case invalidData
+func getPremiumPlanRowData(originalPremiumPlanRow: PremiumPlanRow) throws -> Data {
+    var premiumPlanRow = originalPremiumPlanRow
+    
+    premiumPlanRow.planName = "EeveeSpotify"
+    premiumPlanRow.planIdentifier = "Eevee - WADBB Remod"
+    premiumPlanRow.colorCode = "#FFD2D7"
+    
+    return try premiumPlanRow.serializedData()
 }
 
-// MARK: - Badge Configuration
-struct PremiumBadgeConfig {
-    let name: String
-    let version: Int
-    let colorCode: String
-    
-    static let `default` = PremiumBadgeConfig(
-        name: PremiumPlanConstants.planIdentifier,
-        version: 2,
-        colorCode: PremiumPlanConstants.colorCode
-    )
-}
-
-// MARK: - Service
-final class PremiumPlanDataService {
-    
-    // MARK: - Public Methods
-    
-    func getPremiumPlanBadge(config: PremiumBadgeConfig = .default) throws -> Data {
-        let badge = YourPremiumBadge.with {
-            $0.name = config.name
-            $0.version = config.version
-            $0.colorCode = config.colorCode
-        }
-        
-        return try serializeData(badge)
-    }
-    
-    func getPremiumPlanRowData(originalPremiumPlanRow: PremiumPlanRow) throws -> Data {
-        var premiumPlanRow = originalPremiumPlanRow
-        
-        premiumPlanRow.planName = PremiumPlanConstants.planName
-        premiumPlanRow.planIdentifier = PremiumPlanConstants.planIdentifier
-        premiumPlanRow.colorCode = PremiumPlanConstants.colorCode
-        
-        return try serializeData(premiumPlanRow)
-    }
-    
-    func getPlanOverviewData(
-        status: PremiumPlanConstants.SubscriptionStatus = .subscription,
-        planVariant: PremiumPlanConstants.PlanVariant = .standard
-    ) throws -> Data {
-        let plan = createSpotifyPlan(status: status, planVariant: planVariant)
-        return try serializeData(plan)
-    }
-    
-    // MARK: - Private Methods
-    
-    private func createSpotifyPlan(
-        status: PremiumPlanConstants.SubscriptionStatus,
-        planVariant: PremiumPlanConstants.PlanVariant
-    ) -> SpotifyPlan {
-        return SpotifyPlan.with {
-            $0.notice = createNotice(status: status)
-            $0.subscription = createSubscriptionInfo(planVariant: planVariant)
-        }
-    }
-    
-    private func createNotice(status: PremiumPlanConstants.SubscriptionStatus) -> SpotifyPlan.Notice {
-        return SpotifyPlan.Notice.with {
+func getPlanOverviewData() throws -> Data {
+    let plan = SpotifyPlan.with {
+        $0.notice = SpotifyPlan.Notice.with {
             $0.message = "payment_notice".localized
-            $0.status = Int32(status.rawValue)
+            $0.status = 2 // 0 - trial, 1 - prepaid, 2 - subsсription
+        }
+        $0.subscription = SpotifyPlan.SubscriptionInfo.with {
+            $0.planVariant = 2
+            $0.planName = "EeveeSpotify"
+            $0.planCategory = "Eevee"
+            $0.colorCode = "#FFD2D7"
+            $0.features = [
+                SpotifyPlan.Feature.with {
+                    $0.color = "#1ED760"
+                    $0.description_p = "ad_free_music_listening".localized
+                    $0.icon = SpotifyPlan.IconType.check
+                },
+                SpotifyPlan.Feature.with {
+                    $0.color = "#1ED760"
+                    $0.description_p = "play_songs_in_any_order".localized
+                    $0.icon = SpotifyPlan.IconType.check
+                },
+                SpotifyPlan.Feature.with {
+                    $0.color = "#1ED760"
+                    $0.description_p = "organize_listening_queue".localized
+                    $0.icon = SpotifyPlan.IconType.check
+                }
+            ]
         }
     }
     
-    private func createSubscriptionInfo(planVariant: PremiumPlanConstants.PlanVariant) -> SpotifyPlan.SubscriptionInfo {
-        return SpotifyPlan.SubscriptionInfo.with {
-            $0.planVariant = Int32(planVariant.rawValue)
-            $0.planName = PremiumPlanConstants.planName
-            $0.planCategory = PremiumPlanConstants.planIdentifier
-            $0.colorCode = PremiumPlanConstants.colorCode
-            $0.features = createFeatures()
-        }
-    }
-    
-    private func createFeatures() -> [SpotifyPlan.Feature] {
-        return [
-            createFeature(description: "ad_free_music_listening".localized),
-            createFeature(description: "play_songs_in_any_order".localized),
-            createFeature(description: "organize_listening_queue".localized)
-        ]
-    }
-    
-    private func createFeature(description: String) -> SpotifyPlan.Feature {
-        return SpotifyPlan.Feature.with {
-            $0.color = PremiumPlanConstants.featureColor
-            $0.description_p = description
-            $0.icon = SpotifyPlan.IconType.check
-        }
-    }
-    
-    private func serializeData<T>(_ object: T) throws -> Data {
-        do {
-            if let serializable = object as? Message {
-                return try serializable.serializedData()
-            } else {
-                throw PremiumDataError.invalidData
-            }
-        } catch {
-            throw PremiumDataError.serializationFailed("Failed to serialize data: \(error.localizedDescription)")
-        }
-    }
-}
-
-// MARK: - Convenience Extensions
-extension String {
-    var localized: String {
-        return NSLocalizedString(self, comment: "")
-    }
+    return try plan.serializedData()
 }
