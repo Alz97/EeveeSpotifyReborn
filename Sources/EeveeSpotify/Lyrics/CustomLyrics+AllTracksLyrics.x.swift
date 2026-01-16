@@ -4,7 +4,7 @@ import UIKit
 private var shouldOverrideLocalTrackURI = false
 
 class SPTPlayerTrackHook: ClassHook<NSObject> {
-    typealias Group = BaseLyricsGroup
+    typealias Group = LyricsErrorHandlingGroup  // Not activated for 9.1.x
     static let targetName = EeveeSpotify.hookTarget == .latest
         ? "SPTPlayerTrackImplementation"
         : "SPTPlayerTrack"
@@ -29,8 +29,8 @@ class SPTPlayerTrackHook: ClassHook<NSObject> {
 }
 
 class LyricsScrollProviderHook: ClassHook<NSObject> {
-    typealias Group = BaseLyricsGroup
-    static var targetName = HookTargetNameHelper.lyricsScrollProvider
+    typealias Group = LyricsErrorHandlingGroup  // Not activated for 9.1.x
+    static let targetName = "Lyrics_CoreImpl.LyricsScrollProvider"
     
     func isEnabledForTrack(_ track: SPTPlayerTrack) -> Bool {
         return true
@@ -38,7 +38,7 @@ class LyricsScrollProviderHook: ClassHook<NSObject> {
 }
 
 class NPVScrollViewControllerHook: ClassHook<NSObject> {
-    typealias Group = ModernLyricsGroup
+    typealias Group = LyricsErrorHandlingGroup  // Not activated for 9.1.x (moved from ModernLyricsGroup)
     static var targetName = "NowPlaying_ScrollImpl.NPVScrollViewController"
 
     func viewWillAppear(_ animated: Bool) {
@@ -52,9 +52,10 @@ class NPVScrollViewControllerHook: ClassHook<NSObject> {
     }
 }
 
-class NowPlayingScrollViewControllerHook: ClassHook<NSObject> {
-    typealias Group = LegacyLyricsGroup
-    static var targetName = "NowPlaying_ScrollImpl.NowPlayingScrollViewController"
+// V91-compatible version of NPVScrollViewController hook
+class NPVScrollViewControllerV91Hook: ClassHook<NSObject> {
+    typealias Group = V91LyricsGroup
+    static var targetName = "NowPlaying_ScrollImpl.NPVScrollViewController"
     
     func nowPlayingScrollViewModelWithDidLoadComponentsFor(
         _ track: SPTPlayerTrack,
