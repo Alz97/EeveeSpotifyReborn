@@ -1,3 +1,4 @@
+// Tweak.x.swift (rimuovi l'ultima riga)
 import Orion
 import EeveeSpotifyC
 import UIKit
@@ -108,6 +109,6 @@ struct EeveeSpotify: Tweak {
         
         // Settings integration for non-9.1.x versions
         UniversalSettingsIntegrationGroup().activate()
-        SettingsIntegrationGroup().activate()
+        // Rimuovi questa riga: SettingsIntegrationGroup().activate() - non esiste
     }
 }
