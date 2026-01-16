@@ -14,9 +14,9 @@ class SPTDataLoaderServiceHook: ClassHook<NSObject>, SpotifySessionDelegate {
     }
     
     // orion:new
+    // Invia solo i dati: la completion è gestita esplicitamente nei branch
     func respondWithCustomData(_ data: Data, task: URLSessionDataTask, session: URLSession) {
         orig.URLSession(session, dataTask: task, didReceiveData: data)
-        orig.URLSession(session, task: task, didCompleteWithError: nil)
     }
     
     func URLSession(
@@ -25,6 +25,7 @@ class SPTDataLoaderServiceHook: ClassHook<NSObject>, SpotifySessionDelegate {
         didCompleteWithError error: Error?
     ) {
         guard let url = task.currentRequest?.url else {
+            orig.URLSession(session, task: task, didCompleteWithError: error)
             return
         }
         
@@ -39,14 +40,29 @@ class SPTDataLoaderServiceHook: ClassHook<NSObject>, SpotifySessionDelegate {
         
         do {
             if url.isLyrics {
-                respondWithCustomData(
-                    try getLyricsDataForCurrentTrack(
+                let originalLyrics = try? Lyrics(serializedBytes: buffer)
+                
+                let semaphore = DispatchSemaphore(value: 0)
+                var customLyricsData: Data?
+                
+                DispatchQueue.global(qos: .userInitiated).async {
+                    customLyricsData = try? getLyricsDataForCurrentTrack(
                         url.path,
-                        originalLyrics: try? Lyrics(serializedBytes: buffer)
-                    ),
-                    task: task,
-                    session: session
-                )
+                        originalLyrics: originalLyrics
+                    )
+                    semaphore.signal()
+                }
+                
+                let timeout = DispatchTime.now() + .milliseconds(5000)
+                let result = semaphore.wait(timeout: timeout)
+                
+                if result == .success, let data = customLyricsData {
+                    respondWithCustomData(data, task: task, session: session)
+                } else {
+                    respondWithCustomData(buffer, task: task, session: session)
+                }
+                
+                orig.URLSession(session, task: task, didCompleteWithError: nil)
                 return
             }
             
@@ -58,11 +74,13 @@ class SPTDataLoaderServiceHook: ClassHook<NSObject>, SpotifySessionDelegate {
                     task: task,
                     session: session
                 )
+                orig.URLSession(session, task: task, didCompleteWithError: nil)
                 return
             }
             
             if url.isPremiumBadge {
                 respondWithCustomData(try getPremiumPlanBadge(), task: task, session: session)
+                orig.URLSession(session, task: task, didCompleteWithError: nil)
                 return
             }
             
@@ -70,11 +88,13 @@ class SPTDataLoaderServiceHook: ClassHook<NSObject>, SpotifySessionDelegate {
                 var customizeMessage = try CustomizeMessage(serializedBytes: buffer)
                 modifyRemoteConfiguration(&customizeMessage.response)
                 respondWithCustomData(try customizeMessage.serializedData(), task: task, session: session)
+                orig.URLSession(session, task: task, didCompleteWithError: nil)
                 return
             }
             
             if url.isPlanOverview {
                 respondWithCustomData(try getPlanOverviewData(), task: task, session: session)
+                orig.URLSession(session, task: task, didCompleteWithError: nil)
                 return
             }
         }
@@ -82,7 +102,7 @@ class SPTDataLoaderServiceHook: ClassHook<NSObject>, SpotifySessionDelegate {
             orig.URLSession(session, task: task, didCompleteWithError: error)
         }
     }
-
+    
     func URLSession(
         _ session: URLSession,
         dataTask task: URLSessionDataTask,
@@ -97,10 +117,15 @@ class SPTDataLoaderServiceHook: ClassHook<NSObject>, SpotifySessionDelegate {
             orig.URLSession(session, dataTask: task, didReceiveResponse: response, completionHandler: handler)
             return
         }
-
+        
         do {
             let data = try getLyricsDataForCurrentTrack(url.path)
-            let okResponse = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "2.0", headerFields: [:])!
+            let okResponse = HTTPURLResponse(
+                url: url,
+                statusCode: 200,
+                httpVersion: "2.0",
+                headerFields: [:]
+            )!
             
             orig.URLSession(session, dataTask: task, didReceiveResponse: okResponse, completionHandler: handler)
             respondWithCustomData(data, task: task, session: session)
@@ -108,7 +133,7 @@ class SPTDataLoaderServiceHook: ClassHook<NSObject>, SpotifySessionDelegate {
             orig.URLSession(session, task: task, didCompleteWithError: error)
         }
     }
-
+    
     func URLSession(
         _ session: URLSession,
         dataTask task: URLSessionDataTask,
@@ -117,12 +142,12 @@ class SPTDataLoaderServiceHook: ClassHook<NSObject>, SpotifySessionDelegate {
         guard let url = task.currentRequest?.url else {
             return
         }
-
+        
         if shouldModify(url) {
             URLSessionHelper.shared.setOrAppend(data, for: url)
             return
         }
-
+        
         orig.URLSession(session, dataTask: task, didReceiveData: data)
     }
 }
