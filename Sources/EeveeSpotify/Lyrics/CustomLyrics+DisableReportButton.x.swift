@@ -21,6 +21,11 @@ class LyricsFullscreenViewControllerHook: ClassHook<UIViewController> {
             && !lyricsState.isEmpty {
             return
         }
+
+        // 9.1.x has different view structure - skip headerView access
+        if EeveeSpotify.hookTarget == .v91 {
+            return
+        }
         
         if EeveeSpotify.hookTarget == .latest {
             guard let fullscreenView = WindowHelper.shared.findFirstSubview(
