@@ -20,6 +20,8 @@ env:
 jobs:
   build:
     runs-on: macos-latest
+    permissions:
+      contents: write
     env:
       THEOS: ${{ github.workspace }}/theos
 
@@ -84,6 +86,17 @@ jobs:
           wget https://github.com/asdfzxcvbn/ipapatch/releases/download/v2.1.0/ipapatch.macos-arm64
           sudo mv ipapatch.macos-arm64 /usr/local/bin/ipapatch
           sudo chmod +x /usr/local/bin/ipapatch
+
+      - name: Remove Watch App from IPA
+        run: |
+          unzip -q spotify.ipa -d spotify_temp
+          rm -rf spotify_temp/Payload/Spotify.app/Watch
+          rm -rf spotify_temp/Payload/Spotify.app/PlugIns/*.appex
+          cd spotify_temp
+          zip -qr ../spotify_clean.ipa Payload
+          cd ..
+          rm -rf spotify_temp
+          mv spotify_clean.ipa spotify.ipa
 
       - name: Create EeveeSpotify Package
         run: |
