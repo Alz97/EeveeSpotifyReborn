@@ -1,3 +1,4 @@
+// CustomLyrics.x.swift
 import Orion
 import SwiftUI
 
@@ -15,13 +16,23 @@ var lyricsState = LyricsLoadingState()
 var hasShownRestrictedPopUp = false
 var hasShownUnauthorizedPopUp = false
 
-// Track metadata capture for 9.1.x versions
-var capturedTrackId: String?
-var capturedTrackTitle: String?
-var capturedArtistName: String?
+// NOTA: Le variabili capturedTrackTitle, capturedArtistName, capturedTrackId 
+// sono già dichiarate in V91TrackMetadataCapture.x.swift
+// Non duplicarle qui!
 
 private let geniusLyricsRepository = GeniusLyricsRepository()
 private let petitLyricsRepository = PetitLyricsRepository()
+
+// Dichiarazioni delle funzioni ausiliarie che devono essere implementate
+private func getSystemNowPlayingInfo() -> (title: String?, artist: String?)? {
+    // Implementazione
+    return nil
+}
+
+private func searchViewHierarchyForTrackInfo() -> (title: String?, artist: String?)? {
+    // Implementazione
+    return nil
+}
 
 // Overload for 9.1.x where we only have track ID from URL
 private func loadCustomLyricsForTrackId(_ trackId: String) throws -> Lyrics {
@@ -29,6 +40,7 @@ private func loadCustomLyricsForTrackId(_ trackId: String) throws -> Lyrics {
     let source = UserDefaults.lyricsSource
     
     // Check if we have captured metadata from the UI hooks
+    // NOTA: Queste variabili sono dichiarate in V91TrackMetadataCapture.x.swift
     let hasMetadata = capturedTrackId == trackId && capturedTrackTitle != nil && capturedArtistName != nil
     
     // For 9.1.x: Genius/LRCLIB/Petit need track title/artist
@@ -88,8 +100,6 @@ private func loadCustomLyricsForTrackId(_ trackId: String) throws -> Lyrics {
     return lyrics
 }
 
-//
-
 private func loadCustomLyricsForCurrentTrack() throws -> Lyrics {
     
     // For 9.1.x versions, use the track ID-based approach
@@ -121,7 +131,6 @@ private func loadCustomLyricsForCurrentTrack() throws -> Lyrics {
     let options = UserDefaults.lyricsOptions
     var source = UserDefaults.lyricsSource
     
-    // switched to swift 5.8 syntax to compile with Theos on Linux.
     var repository: LyricsRepository
 
     switch source {
