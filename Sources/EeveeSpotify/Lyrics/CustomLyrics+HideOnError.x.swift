@@ -2,7 +2,7 @@ import Orion
 import UIKit
 
 class ErrorViewControllerHook: ClassHook<UIViewController> {
-    typealias Group = BaseLyricsGroup
+    typealias Group = LyricsErrorHandlingGroup  // Not activated for 9.1.x
     
     static var targetName: String {
         switch EeveeSpotify.hookTarget {
