@@ -16,23 +16,12 @@ var lyricsState = LyricsLoadingState()
 var hasShownRestrictedPopUp = false
 var hasShownUnauthorizedPopUp = false
 
-// NOTA: Le variabili capturedTrackTitle, capturedArtistName, capturedTrackId 
-// sono già dichiarate in V91TrackMetadataCapture.x.swift
-// Non duplicarle qui!
+var capturedTrackId: String?
+var capturedTrackTitle: String?
+var capturedArtistName: String?
 
 private let geniusLyricsRepository = GeniusLyricsRepository()
 private let petitLyricsRepository = PetitLyricsRepository()
-
-// Dichiarazioni delle funzioni ausiliarie che devono essere implementate
-private func getSystemNowPlayingInfo() -> (title: String?, artist: String?)? {
-    // Implementazione
-    return nil
-}
-
-private func searchViewHierarchyForTrackInfo() -> (title: String?, artist: String?)? {
-    // Implementazione
-    return nil
-}
 
 // Overload for 9.1.x where we only have track ID from URL
 private func loadCustomLyricsForTrackId(_ trackId: String) throws -> Lyrics {
