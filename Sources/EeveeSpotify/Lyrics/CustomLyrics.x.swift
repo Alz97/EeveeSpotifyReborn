@@ -16,10 +16,6 @@ var lyricsState = LyricsLoadingState()
 var hasShownRestrictedPopUp = false
 var hasShownUnauthorizedPopUp = false
 
-var capturedTrackId: String?
-var capturedTrackTitle: String?
-var capturedArtistName: String?
-
 private let geniusLyricsRepository = GeniusLyricsRepository()
 private let petitLyricsRepository = PetitLyricsRepository()
 
